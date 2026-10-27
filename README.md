@@ -1,26 +1,149 @@
 # AcomPaci
 
-Sistema para o SUS que permite ao familiar (acompanhante) acompanhar em tempo
-real a situação do paciente no hospital. Projeto de TCC; Gabriel Azevedo Cruz
-cuida do front-end/UX.
+**Acompanhamento do paciente cirúrgico em tempo real, para o SUS.**
 
-Este arquivo junta num só lugar as decisões do projeto e o guia do back-end.
+O AcomPaci permite que o familiar (acompanhante) saiba, pelo celular e em tempo
+real, em que etapa está o paciente no hospital: aguardando, em preparação, em
+cirurgia, na recuperação, no quarto ou de alta. A recepção admite o paciente e
+envia um código ao familiar; a enfermagem atualiza o status; o familiar
+acompanha sem precisar perguntar no balcão.
 
-## Estrutura da pasta
+Projeto de TCC. Gabriel Azevedo Cruz cuida do front-end e da UX.
 
-| Pasta | Conteúdo |
+---
+
+## Sumário
+
+1. [Como usar](#como-usar)
+2. [Acessando o sistema](#acessando-o-sistema)
+3. [Dúvidas comuns](#dúvidas-comuns)
+4. [Estrutura do projeto](#estrutura-do-projeto)
+5. [Decisões do projeto](#decisões-do-projeto)
+6. [Detalhes técnicos](#detalhes-técnicos)
+7. [Ainda falta](#ainda-falta)
+
+---
+
+## Como usar
+
+No Windows, o sistema inteiro liga e desliga com **dois arquivos**. Não é
+preciso abrir terminal nem digitar comandos.
+
+| Arquivo | O que faz |
 |---|---|
-| `src/` | Front-end em React + Vite + Tailwind 4 (três telas, uma por perfil) |
-| `backend/` | API em Python (FastAPI + SQLAlchemy + MySQL) |
-| `Database/` | `schema.sql` (cria banco e tabelas) e o dump original `AcomPaci_db.sql` |
-| `src/imports/` | PDF do planejamento inicial |
+| **`inicia.bat`** | Liga o AcomPaci e abre o navegador na tela da recepção |
+| **`parar.bat`** | Desliga o AcomPaci |
 
-Ainda não há `package.json` na pasta: para rodar o front-end é preciso um
-projeto Vite com React e Tailwind 4 em volta de `src/`.
+### Antes da primeira vez
+
+Instale estes programas no computador (só uma vez):
+
+| Programa | Obrigatório | Onde baixar |
+|---|---|---|
+| Python 3.10 ou mais novo | Sim | https://www.python.org/downloads/ (marque **"Add python.exe to PATH"** na instalação) |
+| Node.js (versão LTS) | Sim | https://nodejs.org/ |
+| MySQL 8 | Não | https://dev.mysql.com/downloads/installer/ (sem ele, o sistema usa um banco SQLite local) |
+
+### Ligar
+
+Dê **dois cliques em `inicia.bat`**.
+
+Na primeira vez em cada computador, ele faz sozinho:
+
+1. Instala as dependências da API e do front-end (pode levar alguns minutos).
+2. Pede a **senha do usuário root do MySQL deste computador**. A senha não
+   aparece enquanto você digita. Se o computador não tiver MySQL, deixe em
+   branco e aperte Enter para usar SQLite.
+3. Cria o banco `AcomPaci_db` e os usuários de demonstração.
+4. Liga a API e o front-end e abre o navegador.
+
+Nas vezes seguintes, ele só liga o sistema e abre o navegador.
+
+A API e o front-end ficam rodando em duas janelas minimizadas, chamadas
+"AcomPaci API" e "AcomPaci Front". Não feche essas janelas enquanto estiver
+usando o sistema.
+
+### Desligar
+
+Dê **dois cliques em `parar.bat`**. Ele fecha as duas janelas e libera as
+portas usadas.
+
+---
+
+## Acessando o sistema
+
+Cada perfil tem o seu próprio endereço. Não existe uma página inicial com a
+lista de perfis, de propósito (veja [Decisões do projeto](#decisões-do-projeto)).
+
+| Perfil | Endereço |
+|---|---|
+| Recepção | http://localhost:5173/recepcionista |
+| Enfermagem | http://localhost:5173/enfermeiro |
+| Acompanhante | http://localhost:5173/acompanhante |
+| Documentação da API | http://localhost:8000/docs |
+
+### Usuários de demonstração
+
+| Perfil | Usuário | Senha |
+|---|---|---|
+| Recepção | `recepcao` | `acompaci123` |
+| Enfermagem | `enfermagem` | `acompaci123` |
+
+O acompanhante não tem login: entra com o código de 6 caracteres que recebe
+por e-mail. Para testar, use um dos pacientes de exemplo, como o código
+`A7K3P2`.
+
+> Os usuários de demonstração servem só para testes. Nunca use essas senhas
+> em um hospital.
+
+---
+
+## Dúvidas comuns
+
+**Cada computador tem uma senha diferente no MySQL. Como fica?**
+A senha é guardada só no arquivo `backend\.env` do próprio computador e nunca
+vai para o GitHub. Se você copiar a pasta para outro computador e a senha
+salva não funcionar lá, o `inicia.bat` pede a senha de novo.
+
+**Errei ou troquei a senha do MySQL.**
+Se a senha salva parar de funcionar, o `inicia.bat` pede a nova sozinho. Para
+forçar a troca (por exemplo, para sair do SQLite e passar a usar o MySQL),
+apague o arquivo `backend\.env` e dê dois cliques em `inicia.bat`. Quem
+prefere o terminal pode rodar `inicia.bat trocar`.
+
+**O `inicia.bat` diz que o sistema já está rodando.**
+Rode o `parar.bat` e depois o `inicia.bat` de novo.
+
+**O e-mail com o código do acompanhante não chega.**
+Por padrão o envio de e-mail fica desligado: o texto aparece na janela
+"AcomPaci API" e a tela da recepção oferece um botão para enviar pelo e-mail
+de quem está atendendo. Para enviar de verdade, configure o SMTP em
+`backend\.env` (veja [E-mail do token](#e-mail-do-token)).
+
+**Apareceu "Python não encontrado" ou "Node.js não encontrado".**
+Instale o programa indicado (veja [Antes da primeira vez](#antes-da-primeira-vez))
+e rode o `inicia.bat` de novo.
+
+---
+
+## Estrutura do projeto
+
+| Caminho | Conteúdo |
+|---|---|
+| `inicia.bat` / `parar.bat` | Ligam e desligam o sistema no Windows |
+| `src/` | Front-end em React + Vite + Tailwind 4 (três telas, uma por perfil) |
+| `src/imports/` | PDF do planejamento inicial |
+| `index.html`, `package.json`, `vite.config.ts`, `tsconfig.json` | Configuração do front-end |
+| `backend/` | API em Python (FastAPI + SQLAlchemy + MySQL ou SQLite) |
+| `backend/configurar.py` | Cria o `.env` do computador e testa a senha do MySQL (usado pelo `inicia.bat`) |
+| `Database/` | `schema.sql` (cria banco e tabelas) e o dump original `AcomPaci_db.sql` |
+
+---
 
 ## Decisões do projeto
 
-### Front-end: três telas, sem página inicial
+### Três telas, sem página inicial
+
 Cada perfil recebe o seu próprio link e não existe tela de escolha de perfil:
 
 - `/acompanhante` consulta pelo código
@@ -34,30 +157,39 @@ o familiar não deve conseguir chegar às telas da equipe. As rotas ficam em
 para `index.html`. Não reintroduzir tela inicial nem botões de voltar para ela.
 
 ### Token do acompanhante por e-mail
+
 O token é enviado **por e-mail** (não WhatsApp/SMS). O formulário da recepção
 pede o e-mail do acompanhante e o back-end envia o código e o link. O botão
 "enviar pelo meu e-mail" (mailto) aparece só quando o envio automático falha.
 
 ### QR code removido
+
 O QR code saiu da tela da recepção. O token é entregue só por e-mail, código
 ou link. Não reintroduzir.
 
 ### Login da equipe
+
 Recepcionista e enfermeiro entram com usuário e senha (JWT, 12h). Só a
 recepção admite pacientes; só a enfermagem muda status; ambos veem a lista.
 O acompanhante continua sem login, apenas com o token. Cada perfil tem sua
 sessão e um botão Sair.
 
 ### Privacidade
+
 O acompanhante vê só as iniciais do paciente (RF004/LGPD) e nunca recebe a
 lista completa de pacientes. O acesso expira 24h após a alta (RNF001).
 
-## Back-end (Python)
+---
+
+## Detalhes técnicos
+
+Esta parte é para quem vai mexer no código. Para só usar o sistema, os
+arquivos `.bat` bastam.
+
+### O que a API faz
 
 API em **FastAPI** que liga o banco **MySQL** (`AcomPaci_db`) às três telas do
-front-end. Substitui o `localStorage` que o front-end usava.
-
-### O que ela faz
+front-end.
 
 - **Login da equipe**: recepcionista e enfermeiro entram com usuário e senha
   (JWT). Cada perfil só faz a sua parte.
@@ -71,101 +203,45 @@ front-end. Substitui o `localStorage` que o front-end usava.
   reconecta sozinho e ressincroniza.
 - O acesso do acompanhante **expira 24h após a alta** (RNF001).
 
-### Como rodar
+### Rodar sem os arquivos .bat (macOS, Linux ou manualmente)
 
-Requer Python 3.10+ e MySQL 8.
+API, em um terminal:
 
 ```bash
 cd backend
 python -m venv .venv
 # Windows: .venv\Scripts\activate      macOS/Linux: source .venv/bin/activate
 pip install -r requirements.txt
-
 cp .env.example .env        # edite a senha do MySQL e, se quiser, o SMTP
 python -m app.seed          # opcional: pacientes e usuários de demonstração
 uvicorn app.main:app --reload --port 8000
 ```
 
+Front-end, em outro terminal, na raiz do projeto:
+
+```bash
+npm install
+npm run dev
+```
+
 - As tabelas são criadas sozinhas ao iniciar. O banco `AcomPaci_db` precisa
   existir (ou rode `Database/schema.sql`, que cria banco e tabelas).
 - Sem `DATABASE_URL` no `.env`, a API usa um arquivo SQLite local
-  (`acompaci.db`), útil para testar sem MySQL.
-- Documentação interativa dos endpoints: http://localhost:8000/docs
+  (`backend/acompaci.db`).
+- No PowerShell, se o `npm` for bloqueado pela política de scripts, use
+  `npm.cmd`.
 
-### Como criar o .env
+### O arquivo .env
 
-O `.env` guarda senhas e chaves, por isso **não vem na pasta** e não deve ser
-enviado para o GitHub (já está no `backend/.gitignore`). Crie o seu a partir
-do modelo `backend/.env.example`:
+O `backend/.env` guarda senhas e chaves, por isso **não vai para o GitHub**
+(está no `backend/.gitignore`). O `inicia.bat` cria esse arquivo sozinho; para
+criar à mão, copie o modelo `backend/.env.example`.
 
-1. **Copie o modelo** dentro da pasta `backend`:
-
-   ```bash
-   cd backend
-   cp .env.example .env          # Windows (PowerShell): copy .env.example .env
-   ```
-
-2. **Crie o banco no MySQL** (uma vez só), rodando o script que cria banco e
-   tabelas:
-
-   ```bash
-   mysql -u root -p < ../Database/schema.sql
-   ```
-
-3. **Conexão com o banco**: em `DATABASE_URL`, troque `SUA_SENHA` pela senha do
-   seu usuário `root` do MySQL (ou use outro usuário):
-
-   ```
-   DATABASE_URL=mysql+pymysql://root:SUA_SENHA@127.0.0.1:3306/AcomPaci_db?charset=utf8mb4
-   ```
-
-   Se a senha tiver caracteres especiais (`@`, `:`, `/`, `#`), escreva-os
-   codificados (`@` vira `%40`, por exemplo). Para testar sem MySQL, apague ou
-   comente essa linha com `#`: a API usa um arquivo SQLite local.
-
-4. **Chave do login (JWT)**: gere uma chave aleatória e cole em `JWT_SECRET`:
-
-   ```bash
-   python -c "import secrets; print(secrets.token_urlsafe(32))"
-   ```
-
-   ```
-   JWT_SECRET=cole_aqui_a_chave_gerada
-   JWT_HORAS=12
-   ```
-
-   Sem ela, todos precisam entrar de novo sempre que a API reinicia. Não
-   compartilhe essa chave.
-
-5. **Endereço do front-end**: deixe `FRONTEND_URL=http://localhost:5173` em
-   desenvolvimento (é a porta padrão do Vite). Em produção, coloque o endereço
-   real do site; ele vai no link do e-mail e libera o CORS.
-
-6. **E-mail do token (opcional)**: para enviar o token de verdade, preencha o
-   SMTP. Exemplo com Gmail:
-
-   ```
-   SMTP_HOST=smtp.gmail.com
-   SMTP_PORT=587
-   SMTP_USER=seu-email@gmail.com
-   SMTP_PASSWORD=senha_de_app_de_16_letras
-   SMTP_FROM=AcomPaci <seu-email@gmail.com>
-   SMTP_TLS=starttls
-   ```
-
-   A senha do Gmail **não** funciona aqui: ative a verificação em duas etapas
-   na conta Google e crie uma "senha de app" em
-   myaccount.google.com/apppasswords. Deixando `SMTP_HOST` vazio, o e-mail só
-   aparece no terminal da API (bom para testes).
-
-7. **Confira**: rode `uvicorn app.main:app --reload --port 8000` e abra
-   http://localhost:8000/docs. Se abrir, o `.env` está certo.
-
-Exemplo de `.env` completo para desenvolvimento:
+Exemplo para desenvolvimento:
 
 ```
 DATABASE_URL=mysql+pymysql://root:minhasenha@127.0.0.1:3306/AcomPaci_db?charset=utf8mb4
-JWT_SECRET=Xb3k9...(sua chave gerada)
+JWT_SECRET=Xb3k9...(chave gerada)
 JWT_HORAS=12
 FRONTEND_URL=http://localhost:5173
 SMTP_HOST=
@@ -176,41 +252,59 @@ SMTP_FROM=AcomPaci <seu-email@gmail.com>
 SMTP_TLS=starttls
 ```
 
-Resumo das variáveis:
+Se a senha do MySQL tiver caracteres especiais (`@`, `:`, `/`, `#`), escreva-os
+codificados na `DATABASE_URL` (`@` vira `%40`, por exemplo). O `inicia.bat` já
+faz isso sozinho. Para gerar uma chave JWT à mão:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
 
 | Variável | Para que serve |
 |---|---|
 | `DATABASE_URL` | Conexão com o MySQL (sem ela, usa SQLite local) |
-| `JWT_SECRET` | Chave que assina o login da equipe |
+| `JWT_SECRET` | Chave que assina o login da equipe. Sem ela, todos precisam entrar de novo sempre que a API reinicia |
 | `JWT_HORAS` | Duração do login (padrão 12, um plantão) |
-| `FRONTEND_URL` | Endereço do front-end (link do e-mail e CORS) |
+| `FRONTEND_URL` | Endereço do front-end (vai no link do e-mail e libera o CORS) |
 | `CORS_ORIGINS` | Opcional: outros endereços liberados no CORS, separados por vírgula (padrão: `FRONTEND_URL`) |
 | `SMTP_*` | Envio do e-mail com o token do acompanhante |
+| `SMTP_TLS` | `starttls` (porta 587), `ssl` (porta 465) ou `none` |
+| `TIMEZONE` | Opcional: fuso dos horários exibidos (padrão `America/Sao_Paulo`) |
+| `EXPIRA_APOS_ALTA_HORAS` | Opcional: horas de acesso do acompanhante após a alta (padrão 24) |
+
+### E-mail do token
+
+Exemplo com Gmail, em `backend\.env`:
+
+```
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=seu-email@gmail.com
+SMTP_PASSWORD=senha_de_app_de_16_letras
+SMTP_FROM=AcomPaci <seu-email@gmail.com>
+SMTP_TLS=starttls
+```
+
+A senha normal do Gmail **não** funciona aqui: ative a verificação em duas
+etapas na conta Google e crie uma "senha de app" em
+myaccount.google.com/apppasswords.
+
+Sem `SMTP_HOST`, o e-mail não sai: o texto aparece no terminal da API e a tela
+da recepção mostra o botão para enviar pelo e-mail dela. Se o servidor de
+e-mail falhar, a admissão é feita mesmo assim e a recepção vê o mesmo botão.
 
 ### Usuários da equipe
 
-Cadastre cada pessoa pelo terminal (a senha é pedida na hora e guardada só
-como hash):
+Cadastre cada pessoa pelo terminal, dentro de `backend` com o ambiente
+ativado (a senha é pedida na hora e guardada só como hash):
 
 ```bash
 python -m app.criar_usuario --perfil recepcionista --login maria --nome "Maria Souza"
 python -m app.criar_usuario --perfil enfermeiro --login joao --nome "João Lima"
 ```
 
-Rodar de novo com o mesmo login troca a senha. O `app.seed` cria dois usuários
-de demonstração, `recepcao` e `enfermagem`, com a senha `acompaci123`: use só
-para testar, nunca em um hospital. Depois de 5 senhas erradas, o usuário fica
-bloqueado por 15 minutos.
-
-### E-mail do token
-
-Com Gmail: `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, seu e-mail em
-`SMTP_USER` e uma **senha de app** em `SMTP_PASSWORD`
-(myaccount.google.com/apppasswords).
-
-Sem `SMTP_HOST`, o e-mail não sai: o texto aparece no terminal da API e a tela
-da recepção mostra o botão para enviar pelo e-mail dela. Se o servidor de
-e-mail falhar, a admissão é feita mesmo assim e a recepção vê o mesmo botão.
+Rodar de novo com o mesmo login troca a senha. Depois de 5 senhas erradas, o
+usuário fica bloqueado por 15 minutos.
 
 ### Ligação com o front-end
 
@@ -239,9 +333,10 @@ cd backend
 pytest
 ```
 
+---
+
 ## Ainda falta
 
 - Limite de tentativas na consulta por token do acompanhante.
 - Tela para gerenciar a equipe (hoje o cadastro é pelo terminal).
 - Em produção, servir a API com HTTPS (a senha e o token trafegam na rede).
-- `package.json` e configuração do Vite para o front-end rodar fora do editor.
